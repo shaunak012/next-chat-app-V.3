@@ -7,6 +7,7 @@
     "build": "tsc",
     "copy-env": "copy .env build",
     "start": "yarn build &&  yarn copy-env && node ./build/server.js",
+    "build-linux":"tsc && cp .env build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",
