@@ -170,7 +170,7 @@ export default function MiniDrawer(props:PropType) {
 
   const defineSidebar = (clicked: string) => {
     settab(clicked);
-    console.log(tab);
+    // console.log(tab);
   };
   const openFrnd = () => {
     setaddFrndDialogue(true);
@@ -180,7 +180,7 @@ export default function MiniDrawer(props:PropType) {
   };
   const addFrnd = () => {
     socket.emit("AddFriend", { userA: username, userB: frndUsername });
-    console.log("FrndReq sent")
+    // console.log("FrndReq sent");
     setfrndUsername("");
     setaddFrndDialogue(false);
     // frndEmail se socket request bhejo
@@ -202,7 +202,7 @@ export default function MiniDrawer(props:PropType) {
       roomid: currentroomRef.current,
       username: username,
     });
-    console.log("message sent: "+message)
+    // console.log("message sent: "+message)
     
   }
 
@@ -217,27 +217,28 @@ export default function MiniDrawer(props:PropType) {
   }
 
   useEffect(() => {
-    socket = io("http://localhost:4000");
+    // socket = io("http://localhost:4000");
+    socket = io("http://34.121.108.174:3000");
     socket.on("connect", () => {
       socket.emit("user-connected", username);
     });
     socket.on("initialdata",(data:data)=>{
-      console.log("initial data recieved");
+      // console.log("initial data recieved");
       setChats(data.rooms)
       setfrndReqs(data.friendRequests);
     });
     socket.on("AddFriendFromServer", (data:friend_req) => {
-      console.log("frndReq Recieved");
+      // console.log("frndReq Recieved");
       setfrndReqs(frndReqs=>[...frndReqs,{userA:data.userA ,userB:data.userB}])
     });
     socket.on("DMcreated",(data:room)=>{
-      console.log("room created")
+      // console.log("room created")
       setdata_chats_add(data)
     });
     socket.on(
       "recieveMessage",
       (data: { message: string; roomid: string; username: string }) => {
-        console.log("message recieved:1")
+        // console.log("message recieved:1")
         setMessage_data_recieve(data);
         
         /***************** FIX THIS ↑ ****************/
@@ -257,12 +258,12 @@ export default function MiniDrawer(props:PropType) {
         break;
       }
     }
-    console.log("Chats: "+Chats)
-    console.log("Room: "+currentRoom);
+    // console.log("Chats: "+Chats)
+    // console.log("Room: "+currentRoom);
   }, [currentRoom])
   
   useEffect(()=>{
-    console.log("messages: "+messages);
+    // console.log("messages: "+messages);
   },[messages])
   
   useEffect(() => {
@@ -284,7 +285,7 @@ export default function MiniDrawer(props:PropType) {
     for (let chat of chats_copy) {
       if (chat.room_id === data.roomid) {
         chat.messages.push({message:data.message,username:data.username})
-        console.log(chats_copy)
+        // console.log(chats_copy)
         setChats(JSON.parse(JSON.stringify(chats_copy)))
         break;
       }
@@ -517,7 +518,7 @@ interface frndReqWithDelUser extends friend_req {
 export const FriendRequest = (props: frndReqWithDelUser) => {
   const AcceptFrndReq=()=>{
     socket.emit("AcceptFriendRequest",{userA:props.userA,userB:props.userB});
-    console.log("frndReq Accepted")
+    // console.log("frndReq Accepted")
     props.deleteUser(props.userA);
   }
   const RejectFrndReq = () => {

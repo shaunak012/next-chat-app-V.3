@@ -11,7 +11,7 @@ export default function useClientRect() {
     (node: any) => {
       if (node !== null) {
         setRect(node.getBoundingClientRect().height);
-        console.log(rect);
+        // console.log(rect);
       }
     },
     [test]

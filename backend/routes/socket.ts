@@ -63,6 +63,7 @@ const initDataMaker = (username:string):data => {
 io.on("connection", (socket:newSocket) => {
     socket.on("user-connected",(username:string)=>{
       socket.username=username;
+      console.log(`${username} connected`)
       //mongo find user(un)
       let exists=false;
       for (let user of users) {

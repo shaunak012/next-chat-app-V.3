@@ -37,7 +37,7 @@ const Login = (props: { setusername: (username: string) => void ,setoldusername:
             </button>
           </form>
           <br></br>
-          <form onSubmit={(e) => submit2(e)}>
+          {/* <form onSubmit={(e) => submit2(e)}>
             <div className={styles.user_box}>
               <input
                 type="text"
@@ -54,7 +54,7 @@ const Login = (props: { setusername: (username: string) => void ,setoldusername:
             <button className={styles.custom_btn} type="submit">
               Submit
             </button>
-          </form>
+          </form> */}
         </div>
       </div>
     </>
