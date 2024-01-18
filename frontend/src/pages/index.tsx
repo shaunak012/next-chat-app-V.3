@@ -1,5 +1,4 @@
 import { useState } from "react";
-import NewChat from "@/components/newchat";
 import Login from "@/components/login";
 import MiniDrawer from "@/components/sidebar";
 import {
