@@ -218,7 +218,7 @@ export default function MiniDrawer(props:PropType) {
 
   useEffect(() => {
     // socket = io("http://localhost:4000");
-    socket = io("http://34.121.108.174:3000");
+    socket = io("http://34.121.108.174:4000");
     socket.on("connect", () => {
       socket.emit("user-connected", username);
     });
@@ -327,7 +327,7 @@ export default function MiniDrawer(props:PropType) {
             <Typography variant="h6" noWrap component="div">
               {/* {chat_header.room_id===currentRoom&&chat_header.users[0].user !== username? chat_header.users[0].user
                     : chat_header.users[1].user} */}
-                    Welcome to the chat
+              Welcome to the chat
             </Typography>
           ))}
         </Toolbar>
@@ -381,7 +381,11 @@ export default function MiniDrawer(props:PropType) {
               </Box>
               <Box>
                 <IconButton onClick={handleFrndRequestDialogOpen("paper")}>
-                  <Badge badgeContent={4} color="primary" max={69}>
+                  <Badge
+                    badgeContent={frndReqs.length}
+                    color="primary"
+                    max={69}
+                  >
                     <NotificationsIcon color="action" />
                   </Badge>
                 </IconButton>
