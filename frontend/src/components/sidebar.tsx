@@ -217,8 +217,8 @@ export default function MiniDrawer(props:PropType) {
   }
 
   useEffect(() => {
-    // socket = io("http://localhost:4000");
-    socket = io("http://34.121.108.174:4000");
+    socket = io("http://localhost:4000");
+    // socket = io("http://backend.shaunak.online");
     socket.on("connect", () => {
       socket.emit("user-connected", username);
     });
@@ -323,13 +323,15 @@ export default function MiniDrawer(props:PropType) {
           >
             <MenuIcon />
           </IconButton>
-          {Chats.map((chat_header) => (
+          {/* {Chats.map((chat_header) => (
             <Typography variant="h6" noWrap component="div">
-              {/* {chat_header.room_id===currentRoom&&chat_header.users[0].user !== username? chat_header.users[0].user
-                    : chat_header.users[1].user} */}
-              Welcome to the chat
+              {chat_header.room_id===currentRoom&&chat_header.users[0].user !== username? chat_header.users[0].user
+                    : chat_header.users[1].user}
             </Typography>
-          ))}
+          ))} */}
+          <Typography variant="h6" noWrap component="div">
+            Welcome to the chat
+          </Typography>
         </Toolbar>
       </AppBar>
       <Drawer variant="permanent" open={open}>
@@ -488,7 +490,11 @@ export default function MiniDrawer(props:PropType) {
                       justifyContent: "center",
                     }}
                   >
-                    <Avatar>F</Avatar>
+                    <Avatar>
+                      {chat.users[0].user !== username
+                        ? chat.users[0].user[0]
+                        : chat.users[1].user[0]}
+                    </Avatar>
                   </ListItemIcon>
                   <ListItemText
                     primary={

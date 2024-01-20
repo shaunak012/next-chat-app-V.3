@@ -37,4 +37,10 @@ export default Index;
 6."textOverflow":"ellipsis" it took me 2hrs to find this property
 7. state is undefined even when i set it 
 
+
+references:
+1. https://stackoverflow.com/questions/65058598/nextjs-cors-issue
+2. https://harkirat.classx.co.in/new-courses/2
+3. https://blog.logrocket.com/using-cors-next-js-handle-cross-origin-requests/
+
 */
