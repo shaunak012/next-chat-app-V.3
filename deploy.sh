@@ -1,5 +1,7 @@
 #!/bin/bash
-export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.5.0/bincd backend
+export PATH=$PATH:/home/ubuntu/.nvm/versions/node/v20.5.0/bin
+
+cd backend
 yarn install
 cp .env.example .env
 yarn build-linux
