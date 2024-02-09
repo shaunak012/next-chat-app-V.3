@@ -21,19 +21,39 @@ import MailIcon from "@mui/icons-material/Mail";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import Paper from "@mui/material/Paper";
 import Button from "@mui/material/Button";
-import { Avatar, Badge, Dialog, DialogActions, DialogContent, DialogContentText, DialogProps, DialogTitle, Icon, Stack, TextField } from "@mui/material";
+import {
+  Avatar,
+  Badge,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogProps,
+  DialogTitle,
+  Icon,
+  Stack,
+  TextField,
+} from "@mui/material";
 
 import ChatUI from "@/components/message";
 import useClientRect from "@/hooks/heightMeasuringHook";
 
 import io, { Socket } from "socket.io-client";
 
-import {chat, data,friend_req,message,room} from "@backend/types/socket_types"
+import {
+  chat,
+  data,
+  friend_req,
+  message,
+  room,
+} from "@backend/types/socket_types";
 import { Cancel, CheckCircle } from "@mui/icons-material";
 import { messagesState } from "@/store/atoms/messages";
 import { useRecoilState } from "recoil";
 import Chat from "./chat";
 import { currentRoomState } from "@/store/atoms/current_room";
+
+import CryptoJS from "crypto-js";
 
 const drawerWidth = 240;
 
@@ -114,15 +134,14 @@ const Item = styled(Paper)(({ theme }) => ({
   color: theme.palette.text.secondary,
 }));
 
-
 type PropType = {
-  username: string,
-  oldusername: string
+  username: string;
+  oldusername: string;
 };
 
 let socket: Socket;
 
-export default function MiniDrawer(props:PropType) {
+export default function MiniDrawer(props: PropType) {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
   const [tab, settab] = useState<string>("Chats");
@@ -130,16 +149,24 @@ export default function MiniDrawer(props:PropType) {
   const [frndUsername, setfrndUsername] = useState("");
   const [openFrndRequestDialog, setOpenFrndRequestDialog] = useState(false);
   const [frndReqs, setfrndReqs] = useState<friend_req[]>([]);
-  const [Chats, setChats] = useState<room[]>([])
-  const [data_chats_add, setdata_chats_add] = useState<room>({ room_id: "",messages: [],users: [],});
-  const [messages, setMessages] = useRecoilState(messagesState)
-  const [message_data_recieve, setMessage_data_recieve] = useState<{ message: string; roomid: string; username: string }>({ message: "", roomid: "", username: "",})
-  const [currentRoom, setCurrentRoom] = useRecoilState(currentRoomState)
+  const [Chats, setChats] = useState<room[]>([]);
+  const [data_chats_add, setdata_chats_add] = useState<room>({
+    room_id: "",
+    messages: [],
+    users: [],
+    secret: "",
+  });
+  const [messages, setMessages] = useRecoilState(messagesState);
+  const [message_data_recieve, setMessage_data_recieve] = useState<{
+    message: string;
+    roomid: string;
+    username: string;
+  }>({ message: "", roomid: "", username: "" });
+  const [currentRoom, setCurrentRoom] = useRecoilState(currentRoomState);
   // const [scroll, setScroll] =useState("paper");
 
-  const currentroomRef=useRef("");
-  const messageRef=useRef<message[]>([])
-
+  const currentroomRef = useRef("");
+  const messageRef = useRef<message[]>([]);
 
   const handleFrndRequestDialogOpen = (scrollType: string) => () => {
     setOpenFrndRequestDialog(true);
@@ -186,69 +213,92 @@ export default function MiniDrawer(props:PropType) {
     // frndEmail se socket request bhejo
   };
 
-  const delFrndReq=(userA:string)=>{
-    const ListWithoutUserA=frndReqs.filter((reqest)=>reqest.userA!=userA)
+  const delFrndReq = (userA: string) => {
+    const ListWithoutUserA = frndReqs.filter((reqest) => reqest.userA != userA);
     setfrndReqs(ListWithoutUserA);
-  }
+  };
 
-  const messagesSetter=(roomid:string)=>{
+  const messagesSetter = (roomid: string) => {
     currentroomRef.current = roomid;
     setCurrentRoom(currentroomRef.current);
-  }
+  };
 
-  const msgSend=(message:string)=>{
-    socket.emit("send_message", {
-      message: message,
-      roomid: currentroomRef.current,
-      username: username,
-    });
+  const msgSend = (message: string) => {
+    const temp_currentRoom = currentRoom;
+    for (let room of Chats) {
+      if (room.room_id === temp_currentRoom) {
+        const temp_msg=encryptString(message, room.secret);
+        socket.emit("send_message", {
+          message: temp_msg,
+          roomid: temp_currentRoom,
+          username: username,
+        });
+        break;
+      }
+    }
     // console.log("message sent: "+message)
-    
-  }
+  };
 
   const randnumb = () => String(Math.floor(Math.random() * 9));
   let username: string;
   if (props.oldusername === "") {
-    username =
-      props.username 
-      // + "#" + randnumb() + randnumb() + randnumb() + randnumb(); //fix this
+    username = props.username;
+    // + "#" + randnumb() + randnumb() + randnumb() + randnumb(); //fix this
   } else {
     username = props.oldusername;
   }
 
+  const encryptString = (plainText: string, secretKey: string): string => {
+    return CryptoJS.AES.encrypt(plainText, secretKey).toString();
+  };
+
+  const decryptString = (cipherText: string, secretKey: string) => {
+    const bytes = CryptoJS.AES.decrypt(cipherText, secretKey);
+    return bytes.toString(CryptoJS.enc.Utf8);
+  };
+
   useEffect(() => {
-    // socket = io("http://localhost:4000");
-    socket = io("http://backend.shaunak.online");
+    socket = io("http://localhost:4000");
+    // socket = io("http://backend.shaunak.online");
     socket.on("connect", () => {
       socket.emit("user-connected", username);
     });
-    socket.on("initialdata",(data:data)=>{
+    socket.on("initialdata", (data: data) => {
       // console.log("initial data recieved");
-      setChats(data.rooms)
+      for (let room of data.rooms) {
+        for (let i = 0; i < room.messages.length; i++) {
+          room.messages[i].message = decryptString(
+            room.messages[i].message,
+            room.secret
+          );
+        }
+      }
+      setChats(data.rooms);
       setfrndReqs(data.friendRequests);
     });
-    socket.on("AddFriendFromServer", (data:friend_req) => {
+    socket.on("AddFriendFromServer", (data: friend_req) => {
       // console.log("frndReq Recieved");
-      setfrndReqs(frndReqs=>[...frndReqs,{userA:data.userA ,userB:data.userB}])
+      setfrndReqs((frndReqs) => [
+        ...frndReqs,
+        { userA: data.userA, userB: data.userB },
+      ]);
     });
-    socket.on("DMcreated",(data:room)=>{
+    socket.on("DMcreated", (data: room) => {
       // console.log("room created")
-      setdata_chats_add(data)
+      setdata_chats_add(data);
     });
     socket.on(
       "recieveMessage",
       (data: { message: string; roomid: string; username: string }) => {
-        // console.log("message recieved:1")
         setMessage_data_recieve(data);
-        
+
         /***************** FIX THIS ↑ ****************/
-        
-      });
-      
-  },[]);
+      }
+    );
+  }, []);
 
   useEffect(() => {
-    if(currentRoom===""){
+    if (currentRoom === "") {
       return;
     }
     for (let chat of Chats) {
@@ -260,51 +310,61 @@ export default function MiniDrawer(props:PropType) {
     }
     // console.log("Chats: "+Chats)
     // console.log("Room: "+currentRoom);
-  }, [currentRoom])
-  
-  useEffect(()=>{
-    // console.log("messages: "+messages);
-  },[messages])
-  
+  }, [currentRoom]);
+
   useEffect(() => {
-    
-    const data=message_data_recieve as { message: string; roomid: string; username: string }
-    if(data.message===""){
+    // console.log("messages: "+messages);
+  }, [messages]);
+
+  useEffect(() => {
+    const data = message_data_recieve as {
+      message: string;
+      roomid: string;
+      username: string;
+    };
+    if (data.message === "") {
       return;
     }
     console.log("message recieved");
     if (currentRoom === data.roomid) {
-      messageRef.current = [
-        ...messages,
-        { message: data.message, username: data.username },
-      ];
-      setMessages(messageRef.current);
+      for (let room of Chats) {
+        if (room.room_id === data.roomid) {
+          messageRef.current = [
+            ...messages,
+            { message: decryptString(data.message, room.secret), username: data.username },
+          ];
+          setMessages(messageRef.current);
+          break;
+        }
+      }
     }
     // const chatRefCopy=chatRef.current;
-    const chats_copy:room[]=JSON.parse(JSON.stringify(Chats));
+    const chats_copy: room[] = JSON.parse(JSON.stringify(Chats));
     for (let chat of chats_copy) {
       if (chat.room_id === data.roomid) {
-        chat.messages.push({message:data.message,username:data.username})
+        chat.messages.push({ message: decryptString(data.message, chat.secret), username: data.username });
         // console.log(chats_copy)
-        setChats(JSON.parse(JSON.stringify(chats_copy)))
+        setChats(JSON.parse(JSON.stringify(chats_copy)));
         break;
       }
     }
-  }, [message_data_recieve])
+  }, [message_data_recieve]);
 
   useEffect(() => {
-    if (JSON.stringify(data_chats_add)===JSON.stringify({
-      room_id: "",
-      messages: [],
-      users: []
-      })){
-        return;
+    if (
+      JSON.stringify(data_chats_add) ===
+      JSON.stringify({
+        room_id: "",
+        messages: [],
+        users: [],
+        secret: "",
+      })
+    ) {
+      return;
     }
-    setChats((prev)=>[...prev,data_chats_add])
-  }, [data_chats_add])
-  
+    setChats((prev) => [...prev, data_chats_add]);
+  }, [data_chats_add]);
 
-  
   const [heightOfNavbar, heightOfNavbarref] = useClientRect();
   return (
     <Box sx={{ display: "flex" }}>
@@ -526,17 +586,20 @@ interface frndReqWithDelUser extends friend_req {
 }
 
 export const FriendRequest = (props: frndReqWithDelUser) => {
-  const AcceptFrndReq=()=>{
-    socket.emit("AcceptFriendRequest",{userA:props.userA,userB:props.userB});
+  const AcceptFrndReq = () => {
+    socket.emit("AcceptFriendRequest", {
+      userA: props.userA,
+      userB: props.userB,
+    });
     // console.log("frndReq Accepted")
     props.deleteUser(props.userA);
-  }
+  };
   const RejectFrndReq = () => {
     socket.emit("RejectFriendRequest", {
       userA: props.userA,
       userB: props.userB,
     });
-    props.deleteUser(props.userA)
+    props.deleteUser(props.userA);
   };
   return (
     <>
@@ -547,16 +610,22 @@ export const FriendRequest = (props: frndReqWithDelUser) => {
         }}
       >
         <Avatar>{props.userA[0]}</Avatar>
-        <Typography sx={{ textOverflow: "ellipsis", margin: "0 5px 0 5px", width:"200px"}}>
+        <Typography
+          sx={{
+            textOverflow: "ellipsis",
+            margin: "0 5px 0 5px",
+            width: "200px",
+          }}
+        >
           {props.userA}
         </Typography>
-        <IconButton onClick={()=>AcceptFrndReq()}>
+        <IconButton onClick={() => AcceptFrndReq()}>
           <CheckCircle></CheckCircle>
         </IconButton>
-        <IconButton onClick={()=>RejectFrndReq()}>
+        <IconButton onClick={() => RejectFrndReq()}>
           <Cancel></Cancel>
         </IconButton>
       </Box>
     </>
   );
-}
+};
