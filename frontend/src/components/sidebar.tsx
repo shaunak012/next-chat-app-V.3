@@ -53,8 +53,6 @@ import { useRecoilState } from "recoil";
 import Chat from "./chat";
 import { currentRoomState } from "@/store/atoms/current_room";
 
-import CryptoJS from "crypto-js";
-
 const drawerWidth = 240;
 
 const openedMixin = (theme: Theme): CSSObject => ({
@@ -352,18 +350,19 @@ export default function MiniDrawer(props: PropType) {
     console.log("message recieved");
     if (currentRoom === data.roomid) {
       for(let room of Chats){
-        messageRef.current = [
-          ...messages,
-          { message: decrypt(data.message,room.secret), username: data.username },
-        ];
-        setMessages(messageRef.current);
+        if(room.room_id===data.roomid){
+          messageRef.current = [
+            ...messages,
+            { message: decrypt(data.message,room.secret), username: data.username },
+          ];
+          setMessages(messageRef.current);
+        }
       }
     }
     // const chatRefCopy=chatRef.current;
     const chats_copy: room[] = JSON.parse(JSON.stringify(Chats));
     for (let chat of chats_copy) {
       if (chat.room_id === data.roomid) {
-
         chat.messages.push({message:decrypt(data.message,chat.secret),username:data.username})
         // console.log(chats_copy)
         setChats(JSON.parse(JSON.stringify(chats_copy)));
