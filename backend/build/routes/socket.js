@@ -45,6 +45,7 @@ const initDataMaker = (username) => {
             room_id: room.room_id,
             messages: room.messages.slice(lengthOfMessages <= 50 ? -1 * lengthOfMessages : -50),
             users: room.users,
+            secret: room.secret,
         });
     }
     return {
@@ -52,6 +53,9 @@ const initDataMaker = (username) => {
         rooms: messagesOfUser,
     };
 };
+function generateRandomNumber() {
+    return Math.floor(Math.random() * 100);
+}
 io.on("connection", (socket) => {
     socket.on("user-connected", (username) => {
         socket.username = username;
@@ -97,6 +101,7 @@ io.on("connection", (socket) => {
             room_id: data.userA + data.userB,
             messages: [],
             users: [{ user: data.userA }, { user: data.userB }],
+            secret: generateRandomNumber(),
         };
         const chat = {
             room_id: data.userA + data.userB,

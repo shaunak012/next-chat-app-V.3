@@ -25,6 +25,7 @@ export interface room {
   room_id: string;
   messages: message[];
   users: username[];
+  secret: number;
 }
 export interface message {
   username: string;

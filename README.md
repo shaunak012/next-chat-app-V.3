@@ -8,18 +8,20 @@ source ./deploy.sh
 ```
 
 ## Windows
-
+### Installing softwares
+1. Install node and npm
+2. 
 ```bash
+npm i yarn -g
 npm i pm2 -g
 cd backend
 yarn install
-pm2 start yarn --interpreter bash --name api -- start
-cd ..
+pm2 start "yarn start" --name server
 cd ..
 cd frontend 
 yarn install
 yarn build
-pm2 start yarn --interpreter bash --name api -- start
+pm2 start "yarn start" --name nextserver
 cd ..
 cd ..
 ```
