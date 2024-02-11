@@ -131,7 +131,7 @@ export default function MiniDrawer(props:PropType) {
   const [openFrndRequestDialog, setOpenFrndRequestDialog] = useState(false);
   const [frndReqs, setfrndReqs] = useState<friend_req[]>([]);
   const [Chats, setChats] = useState<room[]>([])
-  const [data_chats_add, setdata_chats_add] = useState<room>({ room_id: "",messages: [],users: [],});
+  const [data_chats_add, setdata_chats_add] = useState<room>({ room_id: "",messages: [],users: [],secret:0});
   const [messages, setMessages] = useRecoilState(messagesState)
   const [message_data_recieve, setMessage_data_recieve] = useState<{ message: string; roomid: string; username: string }>({ message: "", roomid: "", username: "",})
   const [currentRoom, setCurrentRoom] = useRecoilState(currentRoomState)
@@ -197,11 +197,16 @@ export default function MiniDrawer(props:PropType) {
   }
 
   const msgSend=(message:string)=>{
-    socket.emit("send_message", {
-      message: message,
-      roomid: currentroomRef.current,
-      username: username,
-    });
+    let temp_currentRoom=currentRoom;
+    for(let room of Chats){
+      if(temp_currentRoom===room.room_id){
+        socket.emit("send_message", {
+          message: encrypt(message,room.secret),
+          roomid: currentroomRef.current,
+          username: username,
+        });
+      }
+    }
     // console.log("message sent: "+message)
     
   }
@@ -216,14 +221,62 @@ export default function MiniDrawer(props:PropType) {
     username = props.oldusername;
   }
 
+  const encrypt=(text: string, key: number): string => {
+    let result = "";
+
+    for (let i = 0; i < text.length; i++) {
+      let char = text[i];
+
+      if (char.match(/[A-Z]/)) {
+        result += String.fromCharCode(
+          ((char.charCodeAt(0) + key - 65) % 26) + 65
+        );
+      } else {
+        result += String.fromCharCode(
+          ((char.charCodeAt(0) + key - 97) % 26) + 97
+        );
+      }
+    }
+
+    return result;
+  }
+
+  const decrypt=(text: string, key: number): string =>{
+    let result = "";
+
+    for (let i = 0; i < text.length; i++) {
+      let char = text[i];
+
+      if (char.match(/[A-Z]/)) {
+        result += String.fromCharCode(
+          ((char.charCodeAt(0) - key - 65 + 26) % 26) + 65
+        );
+      } else {
+        result += String.fromCharCode(
+          ((char.charCodeAt(0) - key - 97 + 26) % 26) + 97
+        );
+      }
+    }
+
+    return result;
+  }
+
   useEffect(() => {
-    // socket = io("http://localhost:4000");
-    socket = io("http://backend.shaunak.online");
+    socket = io("http://localhost:4000");
+    // socket = io("http://backend.shaunak.online");
     socket.on("connect", () => {
       socket.emit("user-connected", username);
     });
     socket.on("initialdata",(data:data)=>{
       // console.log("initial data recieved");
+      data.rooms.forEach(room => {
+        for (let i = 0; i < room.messages.length; i++) {
+          room.messages[i].message = decrypt(
+            room.messages[i].message,
+            room.secret
+          );
+        }
+      });
       setChats(data.rooms)
       setfrndReqs(data.friendRequests);
     });
@@ -274,17 +327,19 @@ export default function MiniDrawer(props:PropType) {
     }
     console.log("message recieved");
     if (currentRoom === data.roomid) {
-      messageRef.current = [
-        ...messages,
-        { message: data.message, username: data.username },
-      ];
-      setMessages(messageRef.current);
+      for(let room of Chats){
+        messageRef.current = [
+          ...messages,
+          { message: decrypt(data.message,room.secret), username: data.username },
+        ];
+        setMessages(messageRef.current);
+      }
     }
     // const chatRefCopy=chatRef.current;
     const chats_copy:room[]=JSON.parse(JSON.stringify(Chats));
     for (let chat of chats_copy) {
       if (chat.room_id === data.roomid) {
-        chat.messages.push({message:data.message,username:data.username})
+        chat.messages.push({message:decrypt(data.message,chat.secret),username:data.username})
         // console.log(chats_copy)
         setChats(JSON.parse(JSON.stringify(chats_copy)))
         break;
@@ -296,7 +351,8 @@ export default function MiniDrawer(props:PropType) {
     if (JSON.stringify(data_chats_add)===JSON.stringify({
       room_id: "",
       messages: [],
-      users: []
+      users: [],
+      secret:0
       })){
         return;
     }
