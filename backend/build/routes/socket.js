@@ -45,7 +45,11 @@ const initDataMaker = (username) => {
             room_id: room.room_id,
             messages: room.messages.slice(lengthOfMessages <= 50 ? -1 * lengthOfMessages : -50),
             users: room.users,
+<<<<<<< HEAD
             secret: room.secret,
+=======
+            secret: room.secret
+>>>>>>> 62ff1086113982166bcb3eb26c2d52be36b4cbe6
         });
     }
     return {
@@ -53,8 +57,19 @@ const initDataMaker = (username) => {
         rooms: messagesOfUser,
     };
 };
+<<<<<<< HEAD
 function generateRandomNumber() {
     return Math.floor(Math.random() * 100);
+=======
+function generateRandomString(length) {
+    let result = "";
+    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const charactersLength = characters.length;
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
+>>>>>>> 62ff1086113982166bcb3eb26c2d52be36b4cbe6
 }
 io.on("connection", (socket) => {
     socket.on("user-connected", (username) => {
@@ -101,7 +116,11 @@ io.on("connection", (socket) => {
             room_id: data.userA + data.userB,
             messages: [],
             users: [{ user: data.userA }, { user: data.userB }],
+<<<<<<< HEAD
             secret: generateRandomNumber(),
+=======
+            secret: generateRandomString(32),
+>>>>>>> 62ff1086113982166bcb3eb26c2d52be36b4cbe6
         };
         const chat = {
             room_id: data.userA + data.userB,
