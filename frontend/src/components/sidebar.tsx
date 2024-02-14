@@ -280,7 +280,7 @@ export default function MiniDrawer(props: PropType) {
 
   useEffect(() => {
     // socket = io("http://localhost:4000");
-    socket = io("http://backend.shaunak.online");
+    socket = io("https://backend.shaunak.online");
     socket.on("connect", () => {
       socket.emit("user-connected", username);
     });
